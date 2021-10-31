@@ -14,24 +14,24 @@ jobs:
     runs-on: 'ubuntu-latest'
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
-    - name: Log in to registry
-      uses: docker/login-action@v1
-      with:
-        registry: https://index.docker.io/v1/
-        username: ${{ secrets.AzureAppService_ContainerUsername_d21d791e328f4006aac20c7b22383a34 }}
-        password: ${{ secrets.AzureAppService_ContainerPassword_e11b736463314a968c2a1d08f096c796 }}
+      - name: Log in to registry
+        uses: docker/login-action@v1
+        with:
+          registry: https://index.docker.io/v1/
+          username: ${{ secrets.DOCKER_REGISTRY_SERVER_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_SERVER_PASSWORD}}
 
-    - name: Build and push container image to registry
-      uses: docker/build-push-action@v2
-      with:
-        push: true
-        tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_d21d791e328f4006aac20c7b22383a34 }}/ruanengelbrecht/403-blog:${{ github.sha }}
-        file: ./Dockerfile
+      - name: Build and push container image to registry
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: index.docker.io/${{ secrets.DOCKER_REGISTRY_SERVER_USERNAME }}/403-blog:latest
+          file: ./Dockerfile
 
   deploy:
     runs-on: ubuntu-latest
@@ -41,11 +41,11 @@ jobs:
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-    - name: Deploy to Azure Web App
-      id: deploy-to-webapp
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: '403forbidden'
-        slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_6d5d1ced05554942ad81e11b2cbf4ad5 }}
-        images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_d21d791e328f4006aac20c7b22383a34 }}/ruanengelbrecht/403-blog:${{ github.sha }}'
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: '403forbidden'
+          slot-name: 'production'
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile_6d5d1ced05554942ad81e11b2cbf4ad5 }}
+          images: 'index.docker.io/${{ secrets.DOCKER_REGISTRY_SERVER_USERNAME }}/ruanengelbrecht/403-blog:latest'
